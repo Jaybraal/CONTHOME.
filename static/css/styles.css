@@ -361,7 +361,83 @@ footer small {
     object-fit: cover;
 }
 
-/* --- Responsive --- */
+/* ===========================
+   BOTTOM NAV (móvil)
+   =========================== */
+.bottom-nav {
+    display: none;
+}
+
+/* ===========================
+   RESPONSIVE MÓVIL
+   =========================== */
+@media (max-width: 991px) {
+    /* Espacio para la barra inferior */
+    main {
+        padding-bottom: 5rem !important;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, var(--azul), var(--azul-light));
+        z-index: 1030;
+        box-shadow: 0 -3px 15px rgba(44, 62, 107, 0.25);
+        padding: 0.4rem 0;
+        padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav a {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.65);
+        text-decoration: none;
+        font-size: 0.62rem;
+        font-weight: 600;
+        gap: 2px;
+        padding: 0.3rem 0;
+        transition: color 0.2s;
+        letter-spacing: 0.2px;
+    }
+
+    .bottom-nav a i {
+        font-size: 1.3rem;
+    }
+
+    .bottom-nav a.active {
+        color: #fff;
+    }
+
+    .bottom-nav a.active i {
+        filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+    }
+
+    .bottom-nav a:hover {
+        color: white;
+    }
+
+    /* Navbar collapse styling en móvil */
+    .navbar-collapse {
+        background: rgba(44, 62, 107, 0.97);
+        padding: 0.5rem 0.5rem 1rem;
+        border-radius: 0 0 14px 14px;
+        margin-top: 0.4rem;
+        box-shadow: 0 6px 20px rgba(44, 62, 107, 0.3);
+    }
+
+    .navbar .nav-link {
+        padding: 0.65rem 1rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+    }
+}
+
 @media (max-width: 768px) {
     .card-summary .card-value {
         font-size: 1.3rem;
@@ -371,5 +447,115 @@ footer small {
     }
     .section-title {
         font-size: 1.1rem;
+    }
+
+    /* Formularios más cómodos */
+    .form-section {
+        padding: 1rem;
+    }
+
+    /* Botones táctiles más grandes */
+    .btn {
+        min-height: 38px;
+    }
+
+    /* Gráficos más bajos en móvil */
+    .chart-container {
+        height: 220px;
+    }
+}
+
+/* ===========================
+   TABLAS → TARJETAS EN MÓVIL
+   =========================== */
+@media (max-width: 767px) {
+    .table-mobile-cards {
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .table-mobile-cards thead {
+        display: none;
+    }
+
+    .table-mobile-cards tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--celeste) !important;
+        border-radius: 14px !important;
+        padding: 0.6rem 0.85rem;
+        background: var(--blanco);
+        box-shadow: 0 2px 8px rgba(44, 62, 107, 0.07);
+    }
+
+    .table-mobile-cards td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none !important;
+        padding: 0.35rem 0 !important;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--celeste) !important;
+        gap: 0.5rem;
+    }
+
+    .table-mobile-cards td:last-child {
+        border-bottom: none !important;
+        padding-top: 0.5rem !important;
+    }
+
+    .table-mobile-cards td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--texto-light);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .table-mobile-cards td[data-label=""] {
+        justify-content: center;
+    }
+
+    .table-mobile-cards td[data-label=""]::before {
+        display: none;
+    }
+
+    /* Fila de total en móvil */
+    .table-mobile-cards tfoot {
+        display: block;
+    }
+
+    .table-mobile-cards tfoot tr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 12px !important;
+        padding: 0.6rem 0.85rem;
+    }
+
+    .table-mobile-cards tfoot td {
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .table-mobile-cards tfoot td::before {
+        display: none;
+    }
+
+    /* Fila vacía (sin registros) */
+    .table-mobile-cards tbody tr:has(td[colspan]) {
+        border-radius: 14px;
+        text-align: center;
+    }
+
+    .table-mobile-cards td[colspan] {
+        justify-content: center;
+    }
+
+    .table-mobile-cards td[colspan]::before {
+        display: none;
     }
 }

@@ -15,23 +15,23 @@
     <div class="collapse show" id="formIngreso">
         <form method="POST" action="{{ url_for('agregar_ingreso') }}">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Descripcion</label>
                     <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Salario, Freelance, Venta">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label class="form-label">Monto ($)</label>
                     <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label class="form-label">Fecha</label>
                     <input type="date" name="fecha" class="form-control" required>
                 </div>
-                <div class="col-md-5">
+                <div class="col-12 col-md-5">
                     <label class="form-label">Nota (opcional)</label>
                     <input type="text" name="nota" class="form-control" placeholder="Detalle adicional...">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-12 col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-success w-100">
                         <i class="bi bi-plus-lg"></i> Agregar
                     </button>
@@ -57,7 +57,7 @@
 
 <!-- Tabla de ingresos -->
 <div class="table-responsive">
-    <table class="table table-hover bg-white rounded">
+    <table class="table table-hover bg-white rounded table-mobile-cards">
         <thead>
             <tr>
                 <th>Fecha</th>
@@ -69,10 +69,10 @@
         <tbody>
             {% for ingreso in ingresos %}
             <tr>
-                <td>{{ ingreso.fecha }}</td>
-                <td>{{ ingreso.descripcion }}{% if ingreso.nota %} <small class="text-muted">({{ ingreso.nota }})</small>{% endif %}</td>
-                <td class="text-end fw-bold" style="color: var(--verde);">{{ ingreso.monto|moneda }}</td>
-                <td class="text-center">
+                <td data-label="Fecha">{{ ingreso.fecha }}</td>
+                <td data-label="Descripcion">{{ ingreso.descripcion }}{% if ingreso.nota %} <small class="text-muted">({{ ingreso.nota }})</small>{% endif %}</td>
+                <td data-label="Monto" class="fw-bold" style="color: var(--verde);">{{ ingreso.monto|moneda }}</td>
+                <td data-label="">
                     <a href="{{ url_for('editar_ingreso', id=ingreso.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </a>

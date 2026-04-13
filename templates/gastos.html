@@ -15,26 +15,26 @@
     <div class="collapse show" id="formGasto">
         <form method="POST" action="{{ url_for('agregar_gasto') }}">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Descripcion</label>
                     <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Supermercado, Luz, Internet">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label class="form-label">Monto ($)</label>
                     <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label class="form-label">Tipo</label>
                     <select name="tipo_gasto" class="form-select" required>
                         <option value="fijo">Fijo</option>
                         <option value="variable" selected>Variable</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label class="form-label">Fecha</label>
                     <input type="date" name="fecha" class="form-control" required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <label class="form-label">Categoria</label>
                     <select name="categoria_id" class="form-select">
                         <option value="">-- Seleccionar --</option>
@@ -43,11 +43,11 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-7">
+                <div class="col-12 col-md-7">
                     <label class="form-label">Nota (opcional)</label>
                     <input type="text" name="nota" class="form-control" placeholder="Detalle adicional...">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-12 col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-plus-lg"></i> Agregar
                     </button>
@@ -81,7 +81,7 @@
 
 <!-- Tabla de gastos -->
 <div class="table-responsive">
-    <table class="table table-hover bg-white rounded">
+    <table class="table table-hover bg-white rounded table-mobile-cards">
         <thead>
             <tr>
                 <th>Fecha</th>
@@ -95,12 +95,12 @@
         <tbody>
             {% for gasto in gastos %}
             <tr>
-                <td>{{ gasto.fecha }}</td>
-                <td>{{ gasto.descripcion }}{% if gasto.nota %} <small class="text-muted">({{ gasto.nota }})</small>{% endif %}</td>
-                <td>{{ gasto.categoria_nombre or '-' }}</td>
-                <td><span class="badge badge-{{ gasto.tipo_gasto }}">{{ gasto.tipo_gasto|capitalize }}</span></td>
-                <td class="text-end fw-bold" style="color: var(--naranja);">{{ gasto.monto|moneda }}</td>
-                <td class="text-center">
+                <td data-label="Fecha">{{ gasto.fecha }}</td>
+                <td data-label="Descripcion">{{ gasto.descripcion }}{% if gasto.nota %} <small class="text-muted">({{ gasto.nota }})</small>{% endif %}</td>
+                <td data-label="Categoria">{{ gasto.categoria_nombre or '-' }}</td>
+                <td data-label="Tipo"><span class="badge badge-{{ gasto.tipo_gasto }}">{{ gasto.tipo_gasto|capitalize }}</span></td>
+                <td data-label="Monto" class="fw-bold" style="color: var(--naranja);">{{ gasto.monto|moneda }}</td>
+                <td data-label="">
                     <a href="{{ url_for('editar_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </a>
