@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-people-fill"></i> Gestión de Usuarios</h3>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrear">
+        <i class="bi bi-person-plus"></i> Nuevo Usuario
+    </button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td class="text-muted">{{ u.id }}</td>
+                    <td><i class="bi bi-person-circle me-1"></i>{{ u.username }}</td>
+                    <td>
+                        {% if u.es_admin %}
+                            <span class="badge bg-danger"><i class="bi bi-shield-fill"></i> Admin</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Usuario</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.activo %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">{{ u.created_at }}</td>
+                    <td class="text-end">
+                        {% if u.id != current_user['id'] %}
+                        <form method="POST" action="{{ url_for('admin_toggle_usuario', uid=u.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ 'Desactivar' if u.activo else 'Activar' }}">
+                                <i class="bi bi-{{ 'toggle-on' if u.activo else 'toggle-off' }}"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_eliminar_usuario', uid=u.id) }}" class="d-inline"
+                              onsubmit="return confirm('¿Eliminar usuario {{ u.username }}?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">(tú)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No hay usuarios registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal crear usuario -->
+<div class="modal fade" id="modalCrear" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin_crear_usuario') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Crear Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de usuario</label>
+                        <input type="text" name="username" class="form-control" placeholder="ej: maria" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="es_admin" value="1" id="chkAdmin">
+                        <label class="form-check-label" for="chkAdmin">
+                            <i class="bi bi-shield-fill text-danger"></i> Es administrador
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

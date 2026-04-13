@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Diezmo y Ofrenda{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-heart-fill"></i> Diezmo y Ofrenda</h2>
+
+<!-- Selector de mes y ofrenda -->
+<div class="form-section">
+    <form method="GET" action="{{ url_for('diezmo') }}" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label">Mes</label>
+            <input type="month" name="mes" class="form-control" value="{{ data.mes }}">
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Ofrenda</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" name="ofrenda" class="form-control" value="{{ ofrenda_input }}" min="0" step="0.01" style="max-width: 140px;">
+            </div>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-calendar3"></i> Calcular</button>
+        </div>
+    </form>
+</div>
+
+<!-- Base de calculo -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card card-summary ingresos">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-wallet2"></i> Ingresos del Mes</div>
+                <div class="card-value" style="color: var(--verde);">{{ data.total_ingresos|moneda }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-summary balance-positivo">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-graph-up"></i> Retornos Inversiones</div>
+                <div class="card-value" style="color: var(--verde);">{{ data.total_retornos|moneda }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Base total -->
+<div class="card mb-4" style="border-top: 3px solid var(--verde);">
+    <div class="card-body text-center">
+        <h5 class="mb-2" style="color: var(--texto-light);">Base de Calculo (Ingresos + Retornos)</h5>
+        <h2 class="fw-bold" style="color: var(--azul);">{{ data.base_calculo|moneda }}</h2>
+    </div>
+</div>
+
+<!-- Calculo diezmo/ofrenda -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 style="color: var(--texto-light);">Diezmo (10%)</h6>
+                <h3 class="fw-bold" style="color: var(--azul);">{{ data.diezmo|moneda }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 style="color: var(--texto-light);">Ofrenda</h6>
+                <h3 class="fw-bold" style="color: var(--azul);">{{ data.ofrenda|moneda }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 style="color: var(--texto-light);">Restante</h6>
+                <h3 class="fw-bold" style="color: var(--verde);">{{ data.restante|moneda }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Total destacado -->
+<div class="diezmo-highlight mb-4">
+    <h5 class="mb-2"><i class="bi bi-heart-fill"></i> Total a Dar (Diezmo + Ofrenda)</h5>
+    <div class="amount">{{ data.total_dar|moneda }}</div>
+    <p class="mt-2 mb-0" style="opacity: 0.85;">{{ data.diezmo|moneda }} diezmo + {{ data.ofrenda|moneda }} ofrenda</p>
+</div>
+
+<!-- Desglose detallado -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3" style="color: var(--azul);"><i class="bi bi-list-check"></i> Desglose del Mes {{ data.mes }}</h5>
+        <table class="table table-sm mb-0">
+            <tbody>
+                <tr>
+                    <td><i class="bi bi-wallet2"></i> Ingresos</td>
+                    <td class="text-end" style="color: var(--verde);">{{ data.total_ingresos|moneda }}</td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-graph-up"></i> Retornos de Inversiones</td>
+                    <td class="text-end" style="color: var(--verde);">{{ data.total_retornos|moneda }}</td>
+                </tr>
+                <tr style="background: var(--celeste);" class="fw-bold">
+                    <td>Base de Calculo</td>
+                    <td class="text-end" style="color: var(--azul);">{{ data.base_calculo|moneda }}</td>
+                </tr>
+                <tr>
+                    <td>(-) Diezmo (10%)</td>
+                    <td class="text-end" style="color: var(--naranja);">-{{ data.diezmo|moneda }}</td>
+                </tr>
+                <tr>
+                    <td>(-) Ofrenda</td>
+                    <td class="text-end" style="color: var(--naranja);">-{{ data.ofrenda|moneda }}</td>
+                </tr>
+                <tr class="fw-bold fs-5" style="background: var(--celeste);">
+                    <td style="color: var(--azul);"><i class="bi bi-heart-fill"></i> Total a Dar</td>
+                    <td class="text-end" style="color: var(--azul);">{{ data.total_dar|moneda }}</td>
+                </tr>
+                <tr class="fw-bold" style="background: var(--verde-claro);">
+                    <td style="color: var(--verde);">Restante</td>
+                    <td class="text-end" style="color: var(--verde);">{{ data.restante|moneda }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

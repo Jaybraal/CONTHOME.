@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Editar Gasto{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-pencil"></i> Editar Gasto</h2>
+
+<div class="form-section">
+    <form method="POST">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Descripcion</label>
+                <input type="text" name="descripcion" class="form-control" value="{{ gasto.descripcion }}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Monto ($)</label>
+                <input type="number" name="monto" class="form-control" step="0.01" min="0.01" value="{{ gasto.monto }}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tipo</label>
+                <select name="tipo_gasto" class="form-select" required>
+                    <option value="fijo" {% if gasto.tipo_gasto == 'fijo' %}selected{% endif %}>Fijo</option>
+                    <option value="variable" {% if gasto.tipo_gasto == 'variable' %}selected{% endif %}>Variable</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Fecha</label>
+                <input type="date" name="fecha" class="form-control" value="{{ gasto.fecha }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Categoria</label>
+                <select name="categoria_id" class="form-select">
+                    <option value="">-- Seleccionar --</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if gasto.categoria_id == cat.id %}selected{% endif %}>{{ cat.nombre }} ({{ cat.tipo_gasto }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-7">
+                <label class="form-label">Nota</label>
+                <input type="text" name="nota" class="form-control" value="{{ gasto.nota or '' }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Guardar Cambios</button>
+                <a href="{{ url_for('gastos') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

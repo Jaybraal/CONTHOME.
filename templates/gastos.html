@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Gastos{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-receipt"></i> Gastos</h2>
+
+<!-- Formulario agregar -->
+<div class="form-section">
+    <h5 class="mb-3">
+        <i class="bi bi-plus-circle"></i> Agregar Gasto
+        <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#formGasto">
+            Mostrar/Ocultar
+        </button>
+    </h5>
+    <div class="collapse show" id="formGasto">
+        <form method="POST" action="{{ url_for('agregar_gasto') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Descripcion</label>
+                    <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Supermercado, Luz, Internet">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Monto ($)</label>
+                    <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo_gasto" class="form-select" required>
+                        <option value="fijo">Fijo</option>
+                        <option value="variable" selected>Variable</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Categoria</label>
+                    <select name="categoria_id" class="form-select">
+                        <option value="">-- Seleccionar --</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}">{{ cat.nombre }} ({{ cat.tipo_gasto }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <label class="form-label">Nota (opcional)</label>
+                    <input type="text" name="nota" class="form-control" placeholder="Detalle adicional...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="form-section">
+    <form method="GET" action="{{ url_for('gastos') }}" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label">Tipo</label>
+            <select name="tipo" class="form-select form-select-sm">
+                <option value="todos" {% if filtro_tipo == 'todos' %}selected{% endif %}>Todos</option>
+                <option value="fijo" {% if filtro_tipo == 'fijo' %}selected{% endif %}>Fijo</option>
+                <option value="variable" {% if filtro_tipo == 'variable' %}selected{% endif %}>Variable</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Mes</label>
+            <input type="month" name="mes" class="form-control form-control-sm" value="{{ filtro_mes }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+            <a href="{{ url_for('gastos') }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de gastos -->
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Descripcion</th>
+                <th>Categoria</th>
+                <th>Tipo</th>
+                <th class="text-end">Monto</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gasto in gastos %}
+            <tr>
+                <td>{{ gasto.fecha }}</td>
+                <td>{{ gasto.descripcion }}{% if gasto.nota %} <small class="text-muted">({{ gasto.nota }})</small>{% endif %}</td>
+                <td>{{ gasto.categoria_nombre or '-' }}</td>
+                <td><span class="badge badge-{{ gasto.tipo_gasto }}">{{ gasto.tipo_gasto|capitalize }}</span></td>
+                <td class="text-end fw-bold" style="color: var(--naranja);">{{ gasto.monto|moneda }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('editar_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('eliminar_gasto', id=gasto.id) }}" class="d-inline" onsubmit="return confirm('Eliminar este gasto?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No hay gastos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if gastos %}
+        <tfoot>
+            <tr class="table-dark">
+                <td colspan="4" class="fw-bold">TOTAL</td>
+                <td class="text-end fw-bold">{{ total|moneda }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

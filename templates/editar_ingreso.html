@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Editar Ingreso{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-pencil"></i> Editar Ingreso</h2>
+
+<div class="form-section">
+    <form method="POST">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Descripcion</label>
+                <input type="text" name="descripcion" class="form-control" value="{{ ingreso.descripcion }}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Monto ($)</label>
+                <input type="number" name="monto" class="form-control" step="0.01" min="0.01" value="{{ ingreso.monto }}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Fecha</label>
+                <input type="date" name="fecha" class="form-control" value="{{ ingreso.fecha }}" required>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Nota</label>
+                <input type="text" name="nota" class="form-control" value="{{ ingreso.nota or '' }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Guardar Cambios</button>
+                <a href="{{ url_for('ingresos') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

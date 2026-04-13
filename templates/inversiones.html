@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Inversiones{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-graph-up"></i> Inversiones</h2>
+
+<!-- Formulario agregar -->
+<div class="form-section">
+    <h5 class="mb-3">
+        <i class="bi bi-plus-circle"></i> Agregar Inversion
+        <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#formInversion">
+            Mostrar/Ocultar
+        </button>
+    </h5>
+    <div class="collapse show" id="formInversion">
+        <form method="POST" action="{{ url_for('agregar_inversion') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Descripcion</label>
+                    <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Fondo de inversion, Crypto, Acciones">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Monto Invertido ($)</label>
+                    <input type="number" name="monto_invertido" class="form-control" step="0.01" min="0.01" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nota (opcional)</label>
+                    <input type="text" name="nota" class="form-control" placeholder="Detalle adicional...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de inversiones -->
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded">
+        <thead>
+            <tr>
+                <th>Descripcion</th>
+                <th class="text-end">Invertido</th>
+                <th class="text-end">Retornos</th>
+                <th class="text-end">Beneficio</th>
+                <th class="text-end">ROI</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in inversiones %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('detalle_inversion', id=inv.id) }}" class="text-decoration-none fw-bold">
+                        {{ inv.descripcion }}
+                    </a>
+                    <br><small class="text-muted">Desde: {{ inv.fecha_inicio }}</small>
+                </td>
+                <td class="text-end">{{ inv.monto_invertido|moneda }}</td>
+                <td class="text-end">{{ inv.total_retornos|moneda }}</td>
+                <td class="text-end {% if inv.beneficio_neto >= 0 %}text-verde{% else %}text-azul{% endif %} fw-bold">
+                    {{ inv.beneficio_neto|moneda }}
+                </td>
+                <td class="text-end {% if inv.roi >= 0 %}text-verde{% else %}text-azul{% endif %}">
+                    {{ "%.1f"|format(inv.roi) }}%
+                </td>
+                <td>
+                    {% if inv.estado == 'activa' %}
+                    <span class="badge bg-success">Activa</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Cerrada</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{{ url_for('detalle_inversion', id=inv.id) }}" class="btn btn-sm btn-outline-info" title="Ver detalle">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('eliminar_inversion', id=inv.id) }}" class="d-inline" onsubmit="return confirm('Eliminar esta inversion y todos sus retornos?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">No hay inversiones registradas</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

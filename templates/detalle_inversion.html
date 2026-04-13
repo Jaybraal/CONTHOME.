@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Inversion: {{ inversion.descripcion }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('inversiones') }}" class="btn btn-sm btn-outline-secondary mb-3">
+    <i class="bi bi-arrow-left"></i> Volver a inversiones
+</a>
+
+<h2 class="section-title"><i class="bi bi-graph-up"></i> {{ inversion.descripcion }}</h2>
+
+<!-- Resumen de la inversion -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-summary gastos">
+            <div class="card-body">
+                <div class="card-title">Monto Invertido</div>
+                <div class="card-value">{{ inversion.monto_invertido|moneda }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-summary ingresos">
+            <div class="card-body">
+                <div class="card-title">Total Retornos</div>
+                <div class="card-value">{{ inversion.total_retornos|moneda }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-summary {% if inversion.beneficio_neto >= 0 %}balance-positivo{% else %}balance-negativo{% endif %}">
+            <div class="card-body">
+                <div class="card-title">Beneficio Neto</div>
+                <div class="card-value {% if inversion.beneficio_neto >= 0 %}text-verde{% else %}text-azul{% endif %}">
+                    {{ inversion.beneficio_neto|moneda }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-summary diezmo">
+            <div class="card-body">
+                <div class="card-title">ROI</div>
+                <div class="card-value {% if inversion.roi >= 0 %}text-verde{% else %}text-azul{% endif %}">
+                    {{ "%.1f"|format(inversion.roi) }}%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-auto">
+        {% if inversion.estado == 'activa' %}
+        <span class="badge bg-success fs-6">Activa</span>
+        {% else %}
+        <span class="badge bg-secondary fs-6">Cerrada</span>
+        {% endif %}
+    </div>
+    <div class="col-auto">
+        <small class="text-muted">Inicio: {{ inversion.fecha_inicio }}</small>
+    </div>
+    {% if inversion.nota %}
+    <div class="col-auto">
+        <small class="text-muted">Nota: {{ inversion.nota }}</small>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Agregar retorno (solo si activa) -->
+{% if inversion.estado == 'activa' %}
+<div class="form-section">
+    <h5 class="mb-3"><i class="bi bi-plus-circle"></i> Agregar Retorno</h5>
+    <form method="POST" action="{{ url_for('agregar_retorno', id=inversion.id) }}">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Monto ($)</label>
+                <input type="number" name="monto" class="form-control" step="0.01" required placeholder="Positivo=ganancia, Negativo=perdida">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha</label>
+                <input type="date" name="fecha" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Nota (opcional)</label>
+                <input type="text" name="nota" class="form-control" placeholder="Ej: Dividendo mensual">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-plus-lg"></i> Agregar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="mb-3">
+    <form method="POST" action="{{ url_for('cerrar_inv', id=inversion.id) }}" class="d-inline" onsubmit="return confirm('Cerrar esta inversion? No podras agregar mas retornos.')">
+        <button type="submit" class="btn btn-warning">
+            <i class="bi bi-lock"></i> Cerrar Inversion
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Historial de retornos -->
+<h5 class="mt-4 mb-3">Historial de Retornos</h5>
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th class="text-end">Monto</th>
+                <th>Nota</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for retorno in retornos %}
+            <tr>
+                <td>{{ retorno.fecha }}</td>
+                <td class="text-end fw-bold {% if retorno.monto >= 0 %}text-verde{% else %}text-azul{% endif %}">
+                    {{ retorno.monto|moneda }}
+                </td>
+                <td>{{ retorno.nota or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">No hay retornos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

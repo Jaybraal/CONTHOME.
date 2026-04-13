@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Ingresos{% endblock %}
+
+{% block content %}
+<h2 class="section-title"><i class="bi bi-wallet2"></i> Ingresos</h2>
+
+<!-- Formulario agregar -->
+<div class="form-section">
+    <h5 class="mb-3">
+        <i class="bi bi-plus-circle"></i> Agregar Ingreso
+        <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#formIngreso">
+            Mostrar/Ocultar
+        </button>
+    </h5>
+    <div class="collapse show" id="formIngreso">
+        <form method="POST" action="{{ url_for('agregar_ingreso') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Descripcion</label>
+                    <input type="text" name="descripcion" class="form-control" required placeholder="Ej: Salario, Freelance, Venta">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Monto ($)</label>
+                    <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" class="form-control" required>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Nota (opcional)</label>
+                    <input type="text" name="nota" class="form-control" placeholder="Detalle adicional...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="form-section">
+    <form method="GET" action="{{ url_for('ingresos') }}" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label">Mes</label>
+            <input type="month" name="mes" class="form-control form-control-sm" value="{{ filtro_mes }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+            <a href="{{ url_for('ingresos') }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de ingresos -->
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Descripcion</th>
+                <th class="text-end">Monto</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingreso in ingresos %}
+            <tr>
+                <td>{{ ingreso.fecha }}</td>
+                <td>{{ ingreso.descripcion }}{% if ingreso.nota %} <small class="text-muted">({{ ingreso.nota }})</small>{% endif %}</td>
+                <td class="text-end fw-bold" style="color: var(--verde);">{{ ingreso.monto|moneda }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('editar_ingreso', id=ingreso.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('eliminar_ingreso', id=ingreso.id) }}" class="d-inline" onsubmit="return confirm('Eliminar este ingreso?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">No hay ingresos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if ingresos %}
+        <tfoot>
+            <tr class="table-dark">
+                <td colspan="2" class="fw-bold">TOTAL</td>
+                <td class="text-end fw-bold">{{ total|moneda }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

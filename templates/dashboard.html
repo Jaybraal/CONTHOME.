@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<!-- Header con selector de mes -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="section-title mb-0" style="border-bottom: none;">
+            <i class="bi bi-speedometer2"></i> Mi Panel Personal
+        </h2>
+        <small class="text-muted">Resumen financiero del mes</small>
+    </div>
+    <form method="GET" action="{{ url_for('dashboard') }}" class="d-flex gap-2">
+        <input type="month" name="mes" class="form-control form-control-sm" value="{{ data.mes }}">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-calendar3"></i></button>
+    </form>
+</div>
+
+<!-- Tarjetas resumen -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card card-summary ingresos">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-wallet2"></i> Ingresos</div>
+                <div class="card-value" style="color: var(--verde);">{{ data.total_ingresos|moneda }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card card-summary gastos">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-receipt"></i> Gastos</div>
+                <div class="card-value" style="color: var(--naranja);">{{ data.total_gastos|moneda }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card card-summary {% if data.balance >= 0 %}balance-positivo{% else %}balance-negativo{% endif %}">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-piggy-bank"></i> Balance</div>
+                <div class="card-value" style="color: {% if data.balance >= 0 %}var(--verde){% else %}#E53E3E{% endif %};">
+                    {{ data.balance|moneda }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card card-summary diezmo">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-heart-fill"></i> Diezmo + Ofrenda</div>
+                <div class="card-value" style="color: var(--azul);">{{ data.diezmo.total_dar|moneda }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inversiones resumen -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <small class="text-muted">Inversiones Activas</small>
+                    <h4 class="mb-0" style="color: var(--azul);">{{ data.inversiones_activas }}</h4>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Total Invertido</small>
+                    <h4 class="mb-0" style="color: var(--verde);">{{ data.total_invertido|moneda }}</h4>
+                </div>
+                <a href="{{ url_for('inversiones') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-right"></i> Ver todas
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <small class="text-muted">Retornos del Mes</small>
+                    <h4 class="mb-0" style="color: var(--verde);">{{ data.diezmo.total_retornos|moneda }}</h4>
+                </div>
+                <a href="{{ url_for('diezmo') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-heart-fill"></i> Ver Diezmo
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graficos -->
+<div class="row g-3 mb-4">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body">
+                <h6 style="color: var(--azul);" class="mb-3"><i class="bi bi-bar-chart"></i> Ingresos vs Gastos (6 meses)</h6>
+                <div class="chart-container">
+                    <canvas id="chartMonthly"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body">
+                <h6 style="color: var(--azul);" class="mb-3"><i class="bi bi-pie-chart"></i> Gastos por Categoria</h6>
+                <div class="chart-container">
+                    <canvas id="chartCategories"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    loadDashboardCharts('{{ data.mes }}');
+</script>
+{% endblock %}

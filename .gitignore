@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+conthome.db
+server.log
+.server.pid
+*.db-shm
+*.db-wal
