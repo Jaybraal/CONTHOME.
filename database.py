@@ -24,6 +24,7 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS gastos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL DEFAULT 1,
             descripcion TEXT NOT NULL,
             monto REAL NOT NULL,
             tipo_gasto TEXT NOT NULL CHECK(tipo_gasto IN ('fijo', 'variable')),
@@ -31,26 +32,31 @@ def init_db():
             fecha TEXT NOT NULL,
             nota TEXT,
             created_at TEXT DEFAULT (datetime('now', 'localtime')),
-            FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+            FOREIGN KEY (categoria_id) REFERENCES categorias(id),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         );
 
         CREATE TABLE IF NOT EXISTS ingresos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL DEFAULT 1,
             descripcion TEXT NOT NULL,
             monto REAL NOT NULL,
             fecha TEXT NOT NULL,
             nota TEXT,
-            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         );
 
         CREATE TABLE IF NOT EXISTS inversiones (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL DEFAULT 1,
             descripcion TEXT NOT NULL,
             monto_invertido REAL NOT NULL,
             fecha_inicio TEXT NOT NULL,
             estado TEXT NOT NULL DEFAULT 'activa' CHECK(estado IN ('activa', 'cerrada')),
             nota TEXT,
-            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         );
 
         CREATE TABLE IF NOT EXISTS retornos_inversion (
@@ -99,5 +105,18 @@ def init_db():
             categorias_seed
         )
 
+    conn.commit()
+    conn.close()
+    migrate_db()
+
+
+def migrate_db():
+    """Agrega usuario_id a tablas existentes si no tienen la columna."""
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    for table in ('gastos', 'ingresos', 'inversiones'):
+        cols = [row[1] for row in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'usuario_id' not in cols:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN usuario_id INTEGER NOT NULL DEFAULT 1")
     conn.commit()
     conn.close()

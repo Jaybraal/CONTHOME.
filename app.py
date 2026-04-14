@@ -19,6 +19,10 @@ def get_db():
     return g.db
 
 
+def uid():
+    return session['user_id']
+
+
 @app.teardown_appcontext
 def close_db(exception):
     db = g.pop('db', None)
@@ -89,17 +93,17 @@ def admin_crear_usuario():
     return redirect(url_for('admin_usuarios'))
 
 
-@app.route('/admin/usuarios/<int:uid>/toggle', methods=['POST'])
+@app.route('/admin/usuarios/<int:uid_param>/toggle', methods=['POST'])
 @admin_required
-def admin_toggle_usuario(uid):
-    if uid == session['user_id']:
+def admin_toggle_usuario(uid_param):
+    if uid_param == session['user_id']:
         flash('No puedes desactivar tu propia cuenta.', 'warning')
         return redirect(url_for('admin_usuarios'))
     conn = get_db_connection()
-    user = conn.execute("SELECT * FROM usuarios WHERE id = ?", (uid,)).fetchone()
+    user = conn.execute("SELECT * FROM usuarios WHERE id = ?", (uid_param,)).fetchone()
     if user:
         nuevo = 0 if user['activo'] else 1
-        conn.execute("UPDATE usuarios SET activo = ? WHERE id = ?", (nuevo, uid))
+        conn.execute("UPDATE usuarios SET activo = ? WHERE id = ?", (nuevo, uid_param))
         conn.commit()
         estado = 'activado' if nuevo else 'desactivado'
         flash(f'Usuario "{user["username"]}" {estado}.', 'info')
@@ -107,14 +111,14 @@ def admin_toggle_usuario(uid):
     return redirect(url_for('admin_usuarios'))
 
 
-@app.route('/admin/usuarios/<int:uid>/eliminar', methods=['POST'])
+@app.route('/admin/usuarios/<int:uid_param>/eliminar', methods=['POST'])
 @admin_required
-def admin_eliminar_usuario(uid):
-    if uid == session['user_id']:
+def admin_eliminar_usuario(uid_param):
+    if uid_param == session['user_id']:
         flash('No puedes eliminar tu propia cuenta.', 'warning')
         return redirect(url_for('admin_usuarios'))
     conn = get_db_connection()
-    conn.execute("DELETE FROM usuarios WHERE id = ?", (uid,))
+    conn.execute("DELETE FROM usuarios WHERE id = ?", (uid_param,))
     conn.commit()
     conn.close()
     flash('Usuario eliminado.', 'warning')
@@ -127,7 +131,7 @@ def admin_eliminar_usuario(uid):
 @login_required
 def dashboard():
     mes = request.args.get('mes', '')
-    data = get_dashboard_summary(get_db(), mes=mes)
+    data = get_dashboard_summary(get_db(), uid(), mes=mes)
     return render_template('dashboard.html', data=data)
 
 
@@ -136,8 +140,8 @@ def dashboard():
 def api_dashboard_data():
     mes = request.args.get('mes', '')
     db = get_db()
-    categorias = get_gastos_por_categoria(db, mes=mes)
-    monthly = get_monthly_totals(db)
+    categorias = get_gastos_por_categoria(db, uid(), mes=mes)
+    monthly = get_monthly_totals(db, uid())
     return jsonify({
         'categorias': [{'nombre': c['nombre'] or 'Sin categoria', 'total': c['total']} for c in categorias],
         'monthly': monthly,
@@ -152,7 +156,7 @@ def gastos():
     tipo = request.args.get('tipo', 'todos')
     mes = request.args.get('mes', '')
     db = get_db()
-    items = get_gastos(db, tipo=tipo, mes=mes)
+    items = get_gastos(db, uid(), tipo=tipo, mes=mes)
     categorias_list = get_categorias(db)
     total = sum(item['monto'] for item in items)
     return render_template('gastos.html', gastos=items, categorias=categorias_list,
@@ -163,7 +167,7 @@ def gastos():
 @login_required
 def agregar_gasto():
     form = request.form
-    add_gasto(get_db(), form['descripcion'], form['monto'], form['tipo_gasto'],
+    add_gasto(get_db(), uid(), form['descripcion'], form['monto'], form['tipo_gasto'],
               form.get('categoria_id'), form['fecha'], form.get('nota', ''))
     flash('Gasto agregado correctamente', 'success')
     return redirect(url_for('gastos'))
@@ -175,11 +179,14 @@ def editar_gasto(id):
     db = get_db()
     if request.method == 'POST':
         form = request.form
-        update_gasto(db, id, form['descripcion'], form['monto'], form['tipo_gasto'],
+        update_gasto(db, uid(), id, form['descripcion'], form['monto'], form['tipo_gasto'],
                      form.get('categoria_id'), form['fecha'], form.get('nota', ''))
         flash('Gasto actualizado', 'success')
         return redirect(url_for('gastos'))
-    gasto = get_gasto(db, id)
+    gasto = get_gasto(db, uid(), id)
+    if not gasto:
+        flash('Gasto no encontrado.', 'danger')
+        return redirect(url_for('gastos'))
     categorias_list = get_categorias(db)
     return render_template('editar_gasto.html', gasto=gasto, categorias=categorias_list)
 
@@ -187,7 +194,7 @@ def editar_gasto(id):
 @app.route('/gastos/<int:id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_gasto(id):
-    delete_gasto(get_db(), id)
+    delete_gasto(get_db(), uid(), id)
     flash('Gasto eliminado', 'warning')
     return redirect(url_for('gastos'))
 
@@ -199,7 +206,7 @@ def eliminar_gasto(id):
 def ingresos():
     mes = request.args.get('mes', '')
     db = get_db()
-    items = get_ingresos(db, mes=mes)
+    items = get_ingresos(db, uid(), mes=mes)
     total = sum(item['monto'] for item in items)
     return render_template('ingresos.html', ingresos=items, filtro_mes=mes, total=total)
 
@@ -208,7 +215,7 @@ def ingresos():
 @login_required
 def agregar_ingreso():
     form = request.form
-    add_ingreso(get_db(), form['descripcion'], form['monto'],
+    add_ingreso(get_db(), uid(), form['descripcion'], form['monto'],
                 form['fecha'], form.get('nota', ''))
     flash('Ingreso agregado correctamente', 'success')
     return redirect(url_for('ingresos'))
@@ -220,18 +227,21 @@ def editar_ingreso(id):
     db = get_db()
     if request.method == 'POST':
         form = request.form
-        update_ingreso(db, id, form['descripcion'], form['monto'],
+        update_ingreso(db, uid(), id, form['descripcion'], form['monto'],
                        form['fecha'], form.get('nota', ''))
         flash('Ingreso actualizado', 'success')
         return redirect(url_for('ingresos'))
-    ingreso = get_ingreso(db, id)
+    ingreso = get_ingreso(db, uid(), id)
+    if not ingreso:
+        flash('Ingreso no encontrado.', 'danger')
+        return redirect(url_for('ingresos'))
     return render_template('editar_ingreso.html', ingreso=ingreso)
 
 
 @app.route('/ingresos/<int:id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_ingreso(id):
-    delete_ingreso(get_db(), id)
+    delete_ingreso(get_db(), uid(), id)
     flash('Ingreso eliminado', 'warning')
     return redirect(url_for('ingresos'))
 
@@ -241,7 +251,7 @@ def eliminar_ingreso(id):
 @app.route('/inversiones')
 @login_required
 def inversiones():
-    items = get_inversiones(get_db())
+    items = get_inversiones(get_db(), uid())
     return render_template('inversiones.html', inversiones=items)
 
 
@@ -249,7 +259,7 @@ def inversiones():
 @login_required
 def agregar_inversion():
     form = request.form
-    add_inversion(get_db(), form['descripcion'], form['monto_invertido'],
+    add_inversion(get_db(), uid(), form['descripcion'], form['monto_invertido'],
                   form['fecha_inicio'], form.get('nota', ''))
     flash('Inversion agregada correctamente', 'success')
     return redirect(url_for('inversiones'))
@@ -258,7 +268,7 @@ def agregar_inversion():
 @app.route('/inversiones/<int:id>')
 @login_required
 def detalle_inversion(id):
-    inversion, retornos = get_inversion(get_db(), id)
+    inversion, retornos = get_inversion(get_db(), uid(), id)
     if not inversion:
         flash('Inversion no encontrada', 'danger')
         return redirect(url_for('inversiones'))
@@ -269,7 +279,7 @@ def detalle_inversion(id):
 @login_required
 def agregar_retorno(id):
     form = request.form
-    add_retorno(get_db(), id, form['monto'], form['fecha'], form.get('nota', ''))
+    add_retorno(get_db(), uid(), id, form['monto'], form['fecha'], form.get('nota', ''))
     flash('Retorno agregado', 'success')
     return redirect(url_for('detalle_inversion', id=id))
 
@@ -277,7 +287,7 @@ def agregar_retorno(id):
 @app.route('/inversiones/<int:id>/cerrar', methods=['POST'])
 @login_required
 def cerrar_inv(id):
-    cerrar_inversion(get_db(), id)
+    cerrar_inversion(get_db(), uid(), id)
     flash('Inversion cerrada', 'info')
     return redirect(url_for('detalle_inversion', id=id))
 
@@ -285,7 +295,7 @@ def cerrar_inv(id):
 @app.route('/inversiones/<int:id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_inversion(id):
-    delete_inversion(get_db(), id)
+    delete_inversion(get_db(), uid(), id)
     flash('Inversion eliminada', 'warning')
     return redirect(url_for('inversiones'))
 
@@ -301,8 +311,15 @@ def diezmo():
         ofrenda_monto = float(ofrenda)
     except (ValueError, TypeError):
         ofrenda_monto = 500.0
-    data = get_diezmo_data(get_db(), mes=mes, ofrenda_monto=ofrenda_monto)
+    data = get_diezmo_data(get_db(), uid(), mes=mes, ofrenda_monto=ofrenda_monto)
     return render_template('diezmo.html', data=data, ofrenda_input=ofrenda_monto)
+
+
+# --- Offline fallback ---
+
+@app.route('/offline')
+def offline():
+    return render_template('offline.html')
 
 
 # --- Filtro Jinja2 para moneda ---

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ContHome — Sin conexión</title>
+  <meta name="theme-color" content="#2C3E6B">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a2540;
+      color: #e0e6f0;
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    .icon {
+      font-size: 4rem;
+      opacity: .7;
+    }
+    h1 { font-size: 1.6rem; font-weight: 700; }
+    p  { font-size: 1rem; color: #9aaccc; max-width: 320px; line-height: 1.5; }
+    .badge {
+      background: #2c3e6b;
+      border: 1px solid #3d5a99;
+      border-radius: 999px;
+      padding: .4rem 1rem;
+      font-size: .85rem;
+      color: #7da8e8;
+    }
+    button {
+      margin-top: .5rem;
+      background: #3d5a99;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .75rem 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover { background: #4a6db8; }
+  </style>
+</head>
+<body>
+  <div class="icon">📡</div>
+  <h1>Sin conexión</h1>
+  <p>Esta página no está disponible sin internet.<br>
+     Las secciones que ya visitaste siguen accesibles.</p>
+  <span class="badge">Modo offline activo</span>
+  <button onclick="window.history.back()">← Volver</button>
+  <button onclick="window.location.reload()">Reintentar</button>
+
+  <script>
+    window.addEventListener('online', () => window.location.reload());
+  </script>
+</body>
+</html>

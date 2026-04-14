@@ -16,6 +16,12 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 </head>
 <body>
+    <!-- Banner offline -->
+    <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+         background:#b45309;color:#fff;text-align:center;padding:.5rem 1rem;font-size:.9rem;font-weight:600;">
+      ⚠️ Sin conexión — estás viendo datos guardados. Los cambios se aplicarán al reconectarte.
+    </div>
+
     <!-- App Header (solo móvil) -->
     <header class="app-header d-lg-none">
         <div class="app-header-left">
@@ -151,9 +157,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     {% block scripts %}{% endblock %}
     <script>
+        // Registro del Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(reg => reg.update())
+                .catch(() => {});
         }
+
+        // Banner offline/online
+        const banner = document.getElementById('offline-banner');
+        function syncBanner() {
+            banner.style.display = navigator.onLine ? 'none' : 'block';
+            // Empuja el contenido para que no quede tapado
+            document.body.style.paddingTop = navigator.onLine ? '' : '2.5rem';
+        }
+        syncBanner();
+        window.addEventListener('offline', syncBanner);
+        window.addEventListener('online', () => { syncBanner(); location.reload(); });
+
+        // Aviso al enviar formularios sin conexión
+        document.addEventListener('submit', e => {
+            if (!navigator.onLine) {
+                e.preventDefault();
+                alert('Sin conexión. Conéctate a internet para guardar cambios.');
+            }
+        });
     </script>
 </body>
 </html>
