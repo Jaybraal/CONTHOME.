@@ -32,6 +32,8 @@ body {
     flex-direction: column;
     font-family: 'Inter', sans-serif;
     color: var(--texto);
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 h1, h2, h3, h4, h5, .navbar-brand {
@@ -40,6 +42,59 @@ h1, h2, h3, h4, h5, .navbar-brand {
 
 main {
     flex: 1;
+}
+
+/* ===========================
+   APP HEADER (móvil)
+   =========================== */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    height: 56px;
+    padding: 0 1rem;
+    padding-top: env(safe-area-inset-top);
+    background: linear-gradient(135deg, var(--azul), var(--azul-light));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(44, 62, 107, 0.35);
+}
+
+.app-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.app-header-icon {
+    font-size: 1.35rem;
+    color: var(--celeste);
+}
+
+.app-header-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
+.app-header-logout {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 1.25rem;
+    text-decoration: none;
+    padding: 0.45rem 0.55rem;
+    border-radius: 10px;
+    transition: color 0.2s, background 0.2s;
+    line-height: 1;
+}
+
+.app-header-logout:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* --- Navbar --- */
@@ -372,9 +427,18 @@ footer small {
    RESPONSIVE MÓVIL
    =========================== */
 @media (max-width: 991px) {
-    /* Espacio para la barra inferior */
-    main {
-        padding-bottom: 5rem !important;
+    /* Espacio para app-header fijo arriba + bottom nav abajo */
+    body {
+        padding-top: calc(56px + env(safe-area-inset-top));
+    }
+
+    main.app-content {
+        max-width: 100% !important;
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+        margin-top: 0.6rem !important;
+        margin-bottom: 0 !important;
+        padding-bottom: 5.5rem !important;
     }
 
     /* Bottom nav */
@@ -384,11 +448,11 @@ footer small {
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(135deg, var(--azul), var(--azul-light));
+        background: var(--azul);
         z-index: 1030;
-        box-shadow: 0 -3px 15px rgba(44, 62, 107, 0.25);
-        padding: 0.4rem 0;
-        padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+        box-shadow: 0 -1px 0 rgba(255,255,255,0.08), 0 -4px 20px rgba(0,0,0,0.3);
+        padding: 0.2rem 0;
+        padding-bottom: calc(0.2rem + env(safe-area-inset-bottom));
     }
 
     .bottom-nav a {
@@ -396,18 +460,21 @@ footer small {
         display: flex;
         flex-direction: column;
         align-items: center;
-        color: rgba(255, 255, 255, 0.65);
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.45);
         text-decoration: none;
-        font-size: 0.62rem;
+        font-size: 0.6rem;
         font-weight: 600;
-        gap: 2px;
-        padding: 0.3rem 0;
-        transition: color 0.2s;
+        gap: 3px;
+        padding: 0.5rem 0 0.35rem;
+        transition: color 0.15s;
         letter-spacing: 0.2px;
+        position: relative;
     }
 
     .bottom-nav a i {
-        font-size: 1.3rem;
+        font-size: 1.45rem;
+        line-height: 1;
     }
 
     .bottom-nav a.active {
@@ -415,36 +482,40 @@ footer small {
     }
 
     .bottom-nav a.active i {
-        filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+        color: var(--celeste);
     }
 
-    .bottom-nav a:hover {
-        color: white;
+    /* Indicador activo: línea superior */
+    .bottom-nav a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 20%;
+        right: 20%;
+        height: 2.5px;
+        background: transparent;
+        border-radius: 0 0 3px 3px;
+        transition: background 0.15s;
     }
 
-    /* Navbar collapse styling en móvil */
-    .navbar-collapse {
-        background: rgba(44, 62, 107, 0.97);
-        padding: 0.5rem 0.5rem 1rem;
-        border-radius: 0 0 14px 14px;
-        margin-top: 0.4rem;
-        box-shadow: 0 6px 20px rgba(44, 62, 107, 0.3);
+    .bottom-nav a.active::before {
+        background: var(--celeste);
     }
 
-    .navbar .nav-link {
-        padding: 0.65rem 1rem;
-        border-radius: 10px;
-        font-size: 0.95rem;
+    /* Cards sin hover en táctil */
+    .card:hover {
+        transform: none;
+        box-shadow: 0 2px 12px rgba(44, 62, 107, 0.08);
     }
-}
 
-@media (max-width: 768px) {
     .card-summary .card-value {
         font-size: 1.3rem;
     }
+
     .diezmo-highlight .amount {
         font-size: 2rem;
     }
+
     .section-title {
         font-size: 1.1rem;
     }
@@ -456,12 +527,23 @@ footer small {
 
     /* Botones táctiles más grandes */
     .btn {
-        min-height: 38px;
+        min-height: 42px;
     }
 
     /* Gráficos más bajos en móvil */
     .chart-container {
         height: 220px;
+    }
+}
+
+/* PWA standalone: sin bordes de sistema */
+@media (display-mode: standalone) {
+    .app-header {
+        padding-top: env(safe-area-inset-top);
+        height: calc(56px + env(safe-area-inset-top));
+    }
+    body {
+        padding-top: calc(56px + env(safe-area-inset-top));
     }
 }
 

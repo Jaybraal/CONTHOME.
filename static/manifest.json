@@ -1,0 +1,19 @@
+{
+  "name": "ContHome",
+  "short_name": "ContHome",
+  "description": "Control Personal del Hogar",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2C3E6B",
+  "theme_color": "#2C3E6B",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/static/favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
