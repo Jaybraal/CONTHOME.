@@ -337,4 +337,7 @@ def moneda_filter(value):
 if __name__ == '__main__':
     init_db()
     init_admin()
+    # Asegurar que existe el usuario admin con id=1
+    from init_admin import ensure_admin_exists
+    ensure_admin_exists()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5002)), debug=False)
