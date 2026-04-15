@@ -150,6 +150,12 @@
             <i class="bi bi-heart-fill"></i>
             <span>Diezmo</span>
         </a>
+        {% if current_user and current_user['es_admin'] %}
+        <a href="{{ url_for('admin_usuarios') }}" class="{% if request.endpoint == 'admin_usuarios' %}active{% endif %}">
+            <i class="bi bi-people-fill"></i>
+            <span>Usuarios</span>
+        </a>
+        {% endif %}
     </nav>
     {% endif %}
 

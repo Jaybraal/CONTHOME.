@@ -44,12 +44,12 @@
                     <td class="text-muted small">{{ u.created_at }}</td>
                     <td class="text-end">
                         {% if u.id != current_user['id'] %}
-                        <form method="POST" action="{{ url_for('admin_toggle_usuario', uid=u.id) }}" class="d-inline">
+                        <form method="POST" action="{{ url_for('admin_toggle_usuario', uid_param=u.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ 'Desactivar' if u.activo else 'Activar' }}">
                                 <i class="bi bi-{{ 'toggle-on' if u.activo else 'toggle-off' }}"></i>
                             </button>
                         </form>
-                        <form method="POST" action="{{ url_for('admin_eliminar_usuario', uid=u.id) }}" class="d-inline"
+                        <form method="POST" action="{{ url_for('admin_eliminar_usuario', uid_param=u.id) }}" class="d-inline"
                               onsubmit="return confirm('¿Eliminar usuario {{ u.username }}?')">
                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
                                 <i class="bi bi-trash"></i>

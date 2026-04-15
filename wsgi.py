@@ -7,10 +7,12 @@ if db_path:
 
 from database import init_db
 from auth import init_admin
+from init_admin import ensure_admin_exists
 from app import app
 
 init_db()
 init_admin()
+ensure_admin_exists()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5002)))
