@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash
 
 DATABASE = os.environ.get('DATABASE_PATH', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conthome.db'))
 
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'Ediel123')
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'Ediel2215')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 
