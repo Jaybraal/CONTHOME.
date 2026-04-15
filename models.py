@@ -150,10 +150,12 @@ def get_inversion(db, usuario_id, inversion_id):
         WHERE i.id = ? AND i.usuario_id = ?
         GROUP BY i.id
     """, (inversion_id, usuario_id)).fetchone()
-    retornos = db.execute(
-        "SELECT * FROM retornos_inversion WHERE inversion_id = ? ORDER BY fecha DESC",
-        (inversion_id,)
-    ).fetchall()
+    retornos = db.execute("""
+        SELECT r.* FROM retornos_inversion r
+        JOIN inversiones i ON r.inversion_id = i.id
+        WHERE r.inversion_id = ? AND i.usuario_id = ?
+        ORDER BY r.fecha DESC
+    """, (inversion_id, usuario_id)).fetchall()
     return inversion, retornos
 
 
