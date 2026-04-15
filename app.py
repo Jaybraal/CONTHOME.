@@ -49,6 +49,7 @@ def login():
         password = request.form.get('password', '')
         user = verificar_login(username, password)
         if user:
+            session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['es_admin'] = bool(user['es_admin'])

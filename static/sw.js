@@ -1,6 +1,5 @@
-const STATIC_CACHE = 'conthome-static-v2';
-const PAGES_CACHE  = 'conthome-pages-v2';
-const ALL_CACHES   = [STATIC_CACHE, PAGES_CACHE];
+const STATIC_CACHE = 'conthome-static-v3';
+const ALL_CACHES   = [STATIC_CACHE];
 
 // Assets locales que se cachean al instalar el SW
 const PRECACHE = [
@@ -51,7 +50,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Navegación HTML → network-first + fallback a caché o página offline
+  // Navegación HTML → siempre desde red, NUNCA cachear
+  // Las páginas contienen datos del usuario y NO deben servirse a otro usuario
   if (e.request.mode === 'navigate') {
     e.respondWith(networkFirstNav(e.request));
     return;
@@ -83,14 +83,12 @@ async function staleWhileRevalidate(req, cacheName) {
 }
 
 async function networkFirstNav(req) {
-  const cache = await caches.open(PAGES_CACHE);
+  // NUNCA guardar páginas autenticadas en caché:
+  // podrían ser servidas a un usuario distinto al que las generó.
   try {
-    const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
-    return res;
+    return await fetch(req);
   } catch {
-    const cached = await cache.match(req);
-    if (cached) return cached;
+    // Sin conexión: página offline genérica (sin datos de ningún usuario)
     return caches.match('/offline');
   }
 }
