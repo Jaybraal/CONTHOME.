@@ -307,11 +307,15 @@ def eliminar_inversion(id):
 @login_required
 def diezmo():
     mes = request.args.get('mes', '')
-    ofrenda = request.args.get('ofrenda', '500')
-    try:
-        ofrenda_monto = float(ofrenda)
-    except (ValueError, TypeError):
-        ofrenda_monto = 500.0
+    ofrenda = request.args.get('ofrenda')
+    if ofrenda is not None:
+        try:
+            ofrenda_monto = float(ofrenda)
+        except (ValueError, TypeError):
+            ofrenda_monto = 500.0
+        session['ofrenda_monto'] = ofrenda_monto
+    else:
+        ofrenda_monto = session.get('ofrenda_monto', 500.0)
     data = get_diezmo_data(get_db(), uid(), mes=mes, ofrenda_monto=ofrenda_monto)
     return render_template('diezmo.html', data=data, ofrenda_input=ofrenda_monto)
 
