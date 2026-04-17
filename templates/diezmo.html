@@ -130,11 +130,14 @@
 {% block scripts %}
 <script>
 const ofrendaInput = document.querySelector('input[name="ofrenda"]');
+const params = new URLSearchParams(window.location.search);
 const saved = localStorage.getItem('ofrenda_monto');
 
-const params = new URLSearchParams(window.location.search);
-if (!params.has('ofrenda') && saved !== null) {
-    ofrendaInput.value = saved;
+// Si la URL no trae ofrenda pero hay un valor guardado, redirigir con ese valor
+// para que el servidor recalcule todo correctamente
+if (!params.has('ofrenda') && saved !== null && saved !== '500') {
+    params.set('ofrenda', saved);
+    window.location.replace('?' + params.toString());
 }
 
 ofrendaInput.closest('form').addEventListener('submit', () => {
