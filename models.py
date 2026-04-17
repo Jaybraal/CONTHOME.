@@ -231,7 +231,7 @@ def get_diezmo_data(db, usuario_id, mes='', ofrenda_monto=500.0):
 
 # --- Dashboard ---
 
-def get_dashboard_summary(db, usuario_id, mes=''):
+def get_dashboard_summary(db, usuario_id, mes='', ofrenda_monto=500.0):
     if not mes:
         mes = datetime.now().strftime('%Y-%m')
 
@@ -239,7 +239,7 @@ def get_dashboard_summary(db, usuario_id, mes=''):
     total_gastos = get_total_gastos(db, usuario_id, mes=mes)
     balance = total_ingresos - total_gastos
 
-    diezmo_data = get_diezmo_data(db, usuario_id, mes=mes)
+    diezmo_data = get_diezmo_data(db, usuario_id, mes=mes, ofrenda_monto=ofrenda_monto)
 
     inversiones_activas = db.execute(
         "SELECT COUNT(*) as count, COALESCE(SUM(monto_invertido), 0) as total FROM inversiones WHERE usuario_id = ? AND estado = 'activa'",

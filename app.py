@@ -132,7 +132,8 @@ def admin_eliminar_usuario(uid_param):
 @login_required
 def dashboard():
     mes = request.args.get('mes', '')
-    data = get_dashboard_summary(get_db(), uid(), mes=mes)
+    ofrenda_monto = session.get('ofrenda_monto', 500.0)
+    data = get_dashboard_summary(get_db(), uid(), mes=mes, ofrenda_monto=ofrenda_monto)
     return render_template('dashboard.html', data=data)
 
 
