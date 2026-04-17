@@ -126,3 +126,19 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+const ofrendaInput = document.querySelector('input[name="ofrenda"]');
+const saved = localStorage.getItem('ofrenda_monto');
+
+const params = new URLSearchParams(window.location.search);
+if (!params.has('ofrenda') && saved !== null) {
+    ofrendaInput.value = saved;
+}
+
+ofrendaInput.closest('form').addEventListener('submit', () => {
+    localStorage.setItem('ofrenda_monto', ofrendaInput.value);
+});
+</script>
+{% endblock %}
