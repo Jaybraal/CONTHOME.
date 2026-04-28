@@ -2,7 +2,14 @@
 {% block title %}Diezmo y Ofrenda{% endblock %}
 
 {% block content %}
-<h2 class="section-title"><i class="bi bi-heart-fill"></i> Diezmo y Ofrenda</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="section-title mb-0" style="border-bottom:none;"><i class="bi bi-heart-fill"></i> Diezmo y Ofrenda</h2>
+    <form method="POST" action="{{ url_for('mi_toggle_diezmo') }}">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('¿Desactivar la sección de Diezmo? Puedes reactivarla desde aquí mismo.')">
+            <i class="bi bi-eye-slash"></i> Desactivar sección
+        </button>
+    </form>
+</div>
 
 <!-- Selector de mes y ofrenda -->
 <div class="form-section">

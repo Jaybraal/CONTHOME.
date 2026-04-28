@@ -1,7 +1,8 @@
-from datetime import datetime
+import calendar
+from datetime import datetime, date
 
 
-# --- Categorias (compartidas entre todos los usuarios) ---
+# --- Categorias ---
 
 def get_categorias(db, tipo_gasto=None):
     query = "SELECT * FROM categorias WHERE 1=1"
@@ -15,7 +16,7 @@ def get_categorias(db, tipo_gasto=None):
 
 # --- Gastos ---
 
-def get_gastos(db, usuario_id, tipo='todos', mes=''):
+def get_gastos(db, usuario_id, tipo='todos', mes='', fecha_desde='', fecha_hasta=''):
     query = """
         SELECT g.*, c.nombre as categoria_nombre
         FROM gastos g
@@ -26,7 +27,10 @@ def get_gastos(db, usuario_id, tipo='todos', mes=''):
     if tipo != 'todos':
         query += " AND g.tipo_gasto = ?"
         params.append(tipo)
-    if mes:
+    if fecha_desde and fecha_hasta:
+        query += " AND g.fecha BETWEEN ? AND ?"
+        params.extend([fecha_desde, fecha_hasta])
+    elif mes:
         query += " AND strftime('%Y-%m', g.fecha) = ?"
         params.append(mes)
     query += " ORDER BY g.fecha DESC"
@@ -72,10 +76,13 @@ def get_total_gastos(db, usuario_id, mes=''):
 
 # --- Ingresos ---
 
-def get_ingresos(db, usuario_id, mes=''):
+def get_ingresos(db, usuario_id, mes='', fecha_desde='', fecha_hasta=''):
     query = "SELECT * FROM ingresos WHERE usuario_id = ?"
     params = [usuario_id]
-    if mes:
+    if fecha_desde and fecha_hasta:
+        query += " AND fecha BETWEEN ? AND ?"
+        params.extend([fecha_desde, fecha_hasta])
+    elif mes:
         query += " AND strftime('%Y-%m', fecha) = ?"
         params.append(mes)
     query += " ORDER BY fecha DESC"
@@ -168,7 +175,6 @@ def add_inversion(db, usuario_id, descripcion, monto_invertido, fecha_inicio, no
 
 
 def add_retorno(db, usuario_id, inversion_id, monto, fecha, nota=''):
-    # Verificar que la inversión pertenece al usuario antes de agregar retorno
     inv = db.execute("SELECT id FROM inversiones WHERE id = ? AND usuario_id = ?", (inversion_id, usuario_id)).fetchone()
     if not inv:
         return
@@ -285,3 +291,73 @@ def get_monthly_totals(db, usuario_id, months=6):
         gastos = get_total_gastos(db, usuario_id, mes=mes)
         results.append({'mes': mes, 'ingresos': ingresos, 'gastos': gastos})
     return results
+
+
+# --- Recordatorios ---
+
+def get_recordatorios(db, usuario_id):
+    return db.execute(
+        "SELECT * FROM recordatorios WHERE usuario_id = ? ORDER BY dia_mes",
+        (usuario_id,)
+    ).fetchall()
+
+
+def get_recordatorios_proximos(db, usuario_id, dias=3):
+    today = date.today()
+    all_recs = get_recordatorios(db, usuario_id)
+    proximos = []
+    for r in all_recs:
+        if not r['activo']:
+            continue
+        dia = r['dia_mes']
+        for delta_months in [0, 1]:
+            month = today.month + delta_months
+            year = today.year
+            if month > 12:
+                month -= 12
+                year += 1
+            max_day = calendar.monthrange(year, month)[1]
+            actual_day = min(dia, max_day)
+            try:
+                target = date(year, month, actual_day)
+            except ValueError:
+                continue
+            diff = (target - today).days
+            if 0 <= diff <= dias:
+                proximos.append({
+                    'id': r['id'],
+                    'descripcion': r['descripcion'],
+                    'monto': r['monto'],
+                    'tipo': r['tipo'],
+                    'dia_mes': r['dia_mes'],
+                    'dias_restantes': diff,
+                    'fecha': target.isoformat(),
+                })
+                break
+    return proximos
+
+
+def add_recordatorio(db, usuario_id, descripcion, monto, dia_mes, tipo='gasto'):
+    db.execute(
+        "INSERT INTO recordatorios (usuario_id, descripcion, monto, dia_mes, tipo) VALUES (?, ?, ?, ?, ?)",
+        (usuario_id, descripcion, float(monto) if monto else 0.0, int(dia_mes), tipo)
+    )
+    db.commit()
+
+
+def toggle_recordatorio(db, usuario_id, rec_id):
+    rec = db.execute(
+        "SELECT activo FROM recordatorios WHERE id = ? AND usuario_id = ?",
+        (rec_id, usuario_id)
+    ).fetchone()
+    if rec:
+        db.execute(
+            "UPDATE recordatorios SET activo = ? WHERE id = ? AND usuario_id = ?",
+            (0 if rec['activo'] else 1, rec_id, usuario_id)
+        )
+        db.commit()
+
+
+def delete_recordatorio(db, usuario_id, rec_id):
+    db.execute("DELETE FROM recordatorios WHERE id = ? AND usuario_id = ?", (rec_id, usuario_id))
+    db.commit()

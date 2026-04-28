@@ -22,6 +22,17 @@ def init_db():
             tipo_gasto TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            es_admin INTEGER NOT NULL DEFAULT 0,
+            activo INTEGER NOT NULL DEFAULT 1,
+            diezmo_activo INTEGER NOT NULL DEFAULT 1,
+            fecha_caducidad TEXT,
+            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+        );
+
         CREATE TABLE IF NOT EXISTS gastos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER NOT NULL DEFAULT 1,
@@ -69,17 +80,19 @@ def init_db():
             FOREIGN KEY (inversion_id) REFERENCES inversiones(id) ON DELETE CASCADE
         );
 
-        CREATE TABLE IF NOT EXISTS usuarios (
+        CREATE TABLE IF NOT EXISTS recordatorios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL,
-            es_admin INTEGER NOT NULL DEFAULT 0,
+            usuario_id INTEGER NOT NULL,
+            descripcion TEXT NOT NULL,
+            monto REAL NOT NULL DEFAULT 0,
+            dia_mes INTEGER NOT NULL,
+            tipo TEXT NOT NULL DEFAULT 'gasto',
             activo INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         );
     ''')
 
-    # Seed categorias if empty
     count = cursor.execute("SELECT COUNT(*) FROM categorias").fetchone()[0]
     if count == 0:
         categorias_seed = [
@@ -111,12 +124,33 @@ def init_db():
 
 
 def migrate_db():
-    """Agrega usuario_id a tablas existentes si no tienen la columna."""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+
     for table in ('gastos', 'ingresos', 'inversiones'):
         cols = [row[1] for row in cursor.execute(f"PRAGMA table_info({table})").fetchall()]
         if 'usuario_id' not in cols:
             cursor.execute(f"ALTER TABLE {table} ADD COLUMN usuario_id INTEGER NOT NULL DEFAULT 1")
+
+    usuario_cols = [row[1] for row in cursor.execute("PRAGMA table_info(usuarios)").fetchall()]
+    if 'diezmo_activo' not in usuario_cols:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN diezmo_activo INTEGER NOT NULL DEFAULT 1")
+    if 'fecha_caducidad' not in usuario_cols:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN fecha_caducidad TEXT")
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recordatorios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            descripcion TEXT NOT NULL,
+            monto REAL NOT NULL DEFAULT 0,
+            dia_mes INTEGER NOT NULL,
+            tipo TEXT NOT NULL DEFAULT 'gasto',
+            activo INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()

@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from functools import wraps
 from flask import session, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,6 +18,15 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login', next=request.path))
+        fecha_cad = session.get('fecha_caducidad', '')
+        if fecha_cad:
+            try:
+                if date.today() > date.fromisoformat(fecha_cad):
+                    session.clear()
+                    flash('Tu acceso ha vencido. Contacta al administrador.', 'danger')
+                    return redirect(url_for('login'))
+            except ValueError:
+                pass
         return f(*args, **kwargs)
     return decorated
 
@@ -58,13 +68,19 @@ def verificar_login(username, password):
         (username.strip().lower(),)
     ).fetchone()
     conn.close()
-    if user and check_password_hash(user['password_hash'], password):
-        return user
-    return None
+    if not user or not check_password_hash(user['password_hash'], password):
+        return None
+    fecha_cad = user['fecha_caducidad'] if user['fecha_caducidad'] else ''
+    if fecha_cad:
+        try:
+            if date.today() > date.fromisoformat(fecha_cad):
+                return 'expired'
+        except ValueError:
+            pass
+    return user
 
 
 def init_admin():
-    """Crea el admin inicial desde variables de entorno si no existe ningún usuario."""
     admin_user = os.environ.get('ADMIN_USERNAME', 'admin')
     admin_pass = os.environ.get('ADMIN_PASSWORD', '')
     if not admin_pass:

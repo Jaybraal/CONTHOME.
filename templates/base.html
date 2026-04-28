@@ -32,14 +32,21 @@
                 {% elif request.endpoint in ['ingresos', 'editar_ingreso'] %}Ingresos
                 {% elif request.endpoint in ['inversiones', 'detalle_inversion'] %}Inversiones
                 {% elif request.endpoint == 'diezmo' %}Diezmo
+                {% elif request.endpoint == 'recordatorios' %}Recordatorios
                 {% elif request.endpoint == 'admin_usuarios' %}Usuarios
                 {% else %}ContHome{% endif %}
             </span>
         </div>
         {% if current_user %}
-        <a href="{{ url_for('logout') }}" class="app-header-logout" title="Salir">
-            <i class="bi bi-box-arrow-right"></i>
-        </a>
+        <div class="d-flex align-items-center gap-1">
+            <a href="{{ url_for('recordatorios') }}" class="app-header-logout position-relative" title="Recordatorios" id="bellLink">
+                <i class="bi bi-bell-fill"></i>
+                <span id="bellBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:0.5rem;padding:3px 5px;">!</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="app-header-logout" title="Salir">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
         {% endif %}
     </header>
 
@@ -49,15 +56,6 @@
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                 <i class="bi bi-house-gear"></i> ContHome
             </a>
-            <!-- Usuario visible siempre en móvil -->
-            {% if current_user %}
-            <div class="d-flex d-lg-none align-items-center gap-2 ms-auto me-2">
-                <span class="text-white-50 small"><i class="bi bi-person-circle"></i> {{ current_user['username'] }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light px-2">
-                    <i class="bi bi-box-arrow-right"></i>
-                </a>
-            </div>
-            {% endif %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -83,9 +81,17 @@
                             <i class="bi bi-graph-up"></i> Inversiones
                         </a>
                     </li>
+                    {% if current_user and current_user['diezmo_activo'] %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'diezmo' %}active{% endif %}" href="{{ url_for('diezmo') }}">
                             <i class="bi bi-heart-fill"></i> Diezmo
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'recordatorios' %}active{% endif %} position-relative" href="{{ url_for('recordatorios') }}" id="bellNavDesktop">
+                            <i class="bi bi-bell-fill"></i> Recordatorios
+                            <span id="bellBadgeDesktop" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:0.6rem;">!</span>
                         </a>
                     </li>
                     {% if current_user and current_user['es_admin'] %}
@@ -146,10 +152,17 @@
             <i class="bi bi-graph-up"></i>
             <span>Invers.</span>
         </a>
+        {% if current_user['diezmo_activo'] %}
         <a href="{{ url_for('diezmo') }}" class="{% if request.endpoint == 'diezmo' %}active{% endif %}">
             <i class="bi bi-heart-fill"></i>
             <span>Diezmo</span>
         </a>
+        {% else %}
+        <a href="{{ url_for('recordatorios') }}" class="{% if request.endpoint == 'recordatorios' %}active{% endif %}">
+            <i class="bi bi-bell-fill"></i>
+            <span>Avisos</span>
+        </a>
+        {% endif %}
         {% if current_user and current_user['es_admin'] %}
         <a href="{{ url_for('admin_usuarios') }}" class="{% if request.endpoint == 'admin_usuarios' %}active{% endif %}">
             <i class="bi bi-people-fill"></i>
@@ -163,31 +176,80 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     {% block scripts %}{% endblock %}
     <script>
-        // Registro del Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/sw.js')
                 .then(reg => reg.update())
                 .catch(() => {});
         }
 
-        // Banner offline/online
         const banner = document.getElementById('offline-banner');
         function syncBanner() {
             banner.style.display = navigator.onLine ? 'none' : 'block';
-            // Empuja el contenido para que no quede tapado
             document.body.style.paddingTop = navigator.onLine ? '' : '2.5rem';
         }
         syncBanner();
         window.addEventListener('offline', syncBanner);
         window.addEventListener('online', () => { syncBanner(); location.reload(); });
 
-        // Aviso al enviar formularios sin conexión
         document.addEventListener('submit', e => {
             if (!navigator.onLine) {
                 e.preventDefault();
                 alert('Sin conexión. Conéctate a internet para guardar cambios.');
             }
         });
+
+        // --- Recordatorios: badge + notificaciones ---
+        {% if current_user %}
+        async function checkRecordatoriosProximos() {
+            try {
+                const res = await fetch('/api/recordatorios-proximos');
+                if (!res.ok) return;
+                const proximos = await res.json();
+                if (proximos.length === 0) return;
+
+                const badge = document.getElementById('bellBadge');
+                const badgeDesktop = document.getElementById('bellBadgeDesktop');
+                if (badge) badge.style.display = '';
+                if (badgeDesktop) badgeDesktop.style.display = '';
+
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    proximos.forEach(r => {
+                        const hoy = r.dias_restantes === 0;
+                        const tipoLabel = r.tipo === 'sueldo' ? '💰 Cobro' : '💳 Pago';
+                        const montoStr = r.monto > 0 ? ` — $${parseFloat(r.monto).toFixed(2)}` : '';
+                        const body = hoy
+                            ? `Hoy: ${r.descripcion}${montoStr}`
+                            : `En ${r.dias_restantes} día(s): ${r.descripcion}${montoStr}`;
+                        new Notification(`ContHome ${tipoLabel}`, {
+                            body,
+                            icon: '/static/favicon.png',
+                            tag: `rec-${r.id}`
+                        });
+                    });
+                }
+            } catch(e) {}
+        }
+
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                checkRecordatoriosProximos();
+            } else if (Notification.permission === 'default') {
+                // Solo pedir permiso si hay recordatorios próximos
+                fetch('/api/recordatorios-proximos')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            Notification.requestPermission().then(p => {
+                                if (p === 'granted') checkRecordatoriosProximos();
+                                else checkRecordatoriosProximos(); // aun asi mostrar badge
+                            });
+                        } else {
+                            checkRecordatoriosProximos();
+                        }
+                    }).catch(() => {});
+            }
+        }
+        {% endif %}
     </script>
 </body>
 </html>

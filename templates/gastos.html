@@ -59,7 +59,7 @@
 
 <!-- Filtros -->
 <div class="form-section">
-    <form method="GET" action="{{ url_for('gastos') }}" class="row g-2 align-items-end">
+    <form method="GET" action="{{ url_for('gastos') }}" id="formFiltro" class="row g-2 align-items-end">
         <div class="col-auto">
             <label class="form-label">Tipo</label>
             <select name="tipo" class="form-select form-select-sm">
@@ -69,14 +69,36 @@
             </select>
         </div>
         <div class="col-auto">
+            <label class="form-label">Periodo</label>
+            <select id="selectPeriodo" class="form-select form-select-sm">
+                <option value="mes">Por mes</option>
+                <option value="semana">Esta semana</option>
+                <option value="hoy">Hoy</option>
+                <option value="rango">Rango personalizado</option>
+            </select>
+        </div>
+        <div class="col-auto" id="divMes">
             <label class="form-label">Mes</label>
-            <input type="month" name="mes" class="form-control form-control-sm" value="{{ filtro_mes }}">
+            <input type="month" name="mes" id="inputMes" class="form-control form-control-sm" value="{{ filtro_mes }}">
+        </div>
+        <div class="col-auto" id="divDesde" style="display:none">
+            <label class="form-label">Desde</label>
+            <input type="date" name="fecha_desde" id="inputDesde" class="form-control form-control-sm" value="{{ filtro_desde }}">
+        </div>
+        <div class="col-auto" id="divHasta" style="display:none">
+            <label class="form-label">Hasta</label>
+            <input type="date" name="fecha_hasta" id="inputHasta" class="form-control form-control-sm" value="{{ filtro_hasta }}">
         </div>
         <div class="col-auto">
             <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
             <a href="{{ url_for('gastos') }}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
         </div>
     </form>
+    {% if filtro_desde and filtro_hasta %}
+    <div class="mt-2">
+        <small class="text-muted"><i class="bi bi-calendar-range"></i> Mostrando del <strong>{{ filtro_desde }}</strong> al <strong>{{ filtro_hasta }}</strong></small>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Tabla de gastos -->
@@ -128,4 +150,83 @@
         {% endif %}
     </table>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('formFiltro');
+const selectPeriodo = document.getElementById('selectPeriodo');
+const divMes = document.getElementById('divMes');
+const divDesde = document.getElementById('divDesde');
+const divHasta = document.getElementById('divHasta');
+const inputMes = document.getElementById('inputMes');
+const inputDesde = document.getElementById('inputDesde');
+const inputHasta = document.getElementById('inputHasta');
+
+const filtroDesde = '{{ filtro_desde }}';
+const filtroHasta = '{{ filtro_hasta }}';
+
+function getToday() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getWeekRange() {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diff);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return [monday.toISOString().split('T')[0], sunday.toISOString().split('T')[0]];
+}
+
+function showMes() {
+    divMes.style.display = '';
+    divDesde.style.display = 'none';
+    divHasta.style.display = 'none';
+    inputMes.name = 'mes';
+    inputDesde.name = '';
+    inputHasta.name = '';
+}
+
+function showRango() {
+    divMes.style.display = 'none';
+    divDesde.style.display = '';
+    divHasta.style.display = '';
+    inputMes.name = '';
+    inputDesde.name = 'fecha_desde';
+    inputHasta.name = 'fecha_hasta';
+}
+
+// Inicializar según filtros activos
+if (filtroDesde && filtroHasta) {
+    selectPeriodo.value = 'rango';
+    showRango();
+} else {
+    selectPeriodo.value = 'mes';
+    showMes();
+}
+
+selectPeriodo.addEventListener('change', function() {
+    const val = this.value;
+    if (val === 'mes') {
+        showMes();
+    } else if (val === 'hoy') {
+        showRango();
+        const today = getToday();
+        inputDesde.value = today;
+        inputHasta.value = today;
+        form.submit();
+    } else if (val === 'semana') {
+        showRango();
+        const [desde, hasta] = getWeekRange();
+        inputDesde.value = desde;
+        inputHasta.value = hasta;
+        form.submit();
+    } else {
+        showRango();
+    }
+});
+</script>
 {% endblock %}

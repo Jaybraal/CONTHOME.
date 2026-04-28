@@ -2,6 +2,37 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
+<!-- Alertas de recordatorios próximos -->
+{% if recordatorios_proximos %}
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-start gap-2 mb-3" role="alert">
+    <i class="bi bi-bell-fill fs-5 mt-1 flex-shrink-0"></i>
+    <div>
+        <strong>Recordatorios próximos ({{ recordatorios_proximos|length }}):</strong>
+        {% for r in recordatorios_proximos %}
+        <div class="mt-1">
+            {% if r.tipo == 'sueldo' %}
+            <span class="badge bg-success me-1">Cobro</span>
+            {% else %}
+            <span class="badge bg-danger me-1">Pago</span>
+            {% endif %}
+            <strong>{{ r.descripcion }}</strong>
+            {% if r.monto > 0 %}<span class="text-muted"> — {{ r.monto|moneda }}</span>{% endif %}
+            —
+            {% if r.dias_restantes == 0 %}
+            <span class="fw-bold text-danger">HOY</span>
+            {% else %}
+            <span class="text-muted">en {{ r.dias_restantes }} día(s) ({{ r.fecha }})</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('recordatorios') }}" class="btn btn-sm btn-warning mt-2">
+            <i class="bi bi-bell"></i> Ver todos los recordatorios
+        </a>
+    </div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 <!-- Header con selector de mes -->
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
@@ -44,6 +75,7 @@
             </div>
         </div>
     </div>
+    {% if current_user and current_user['diezmo_activo'] %}
     <div class="col-md-3 col-6">
         <div class="card card-summary diezmo">
             <div class="card-body">
@@ -52,6 +84,16 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="col-md-3 col-6">
+        <div class="card card-summary" style="border-left-color: var(--azul-claro);">
+            <div class="card-body">
+                <div class="card-title"><i class="bi bi-bell-fill"></i> Recordatorios</div>
+                <div class="card-value" style="color: var(--azul);">{{ recordatorios_proximos|length }} próximos</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Inversiones resumen -->
@@ -74,6 +116,7 @@
         </div>
     </div>
     <div class="col-md-6">
+        {% if current_user and current_user['diezmo_activo'] %}
         <div class="card">
             <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
@@ -85,6 +128,19 @@
                 </a>
             </div>
         </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <small class="text-muted">Retornos del Mes</small>
+                    <h4 class="mb-0" style="color: var(--verde);">{{ data.diezmo.total_retornos|moneda }}</h4>
+                </div>
+                <a href="{{ url_for('recordatorios') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-bell"></i> Recordatorios
+                </a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 

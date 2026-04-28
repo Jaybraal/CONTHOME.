@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Recordatorios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="section-title mb-0" style="border-bottom:none;">
+        <i class="bi bi-bell-fill"></i> Recordatorios de Pagos y Cobros
+    </h2>
+    <button class="btn btn-sm btn-outline-secondary" id="btnActivarNotif" style="display:none">
+        <i class="bi bi-bell"></i> Activar notificaciones
+    </button>
+</div>
+<p class="text-muted mb-4">Programa el día del mes en que vence un pago fijo o recibes tu sueldo. Recibirás un aviso cuando se acerque la fecha.</p>
+
+<!-- Próximos (alertas) -->
+{% if proximos %}
+<div class="mb-4">
+    <h5 style="color: var(--azul);"><i class="bi bi-alarm-fill text-warning"></i> Próximos (en los siguientes 3 días)</h5>
+    <div class="row g-3">
+        {% for r in proximos %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm" style="border-left: 5px solid {% if r.tipo == 'sueldo' %}var(--verde){% else %}var(--naranja){% endif %} !important; border-left-style: solid !important;">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold" style="color: var(--azul);">
+                            {% if r.tipo == 'sueldo' %}
+                            <i class="bi bi-cash-coin text-success me-1"></i>
+                            {% else %}
+                            <i class="bi bi-credit-card text-danger me-1"></i>
+                            {% endif %}
+                            {{ r.descripcion }}
+                        </div>
+                        {% if r.monto > 0 %}
+                        <div class="text-muted small">{{ r.monto|moneda }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        {% if r.dias_restantes == 0 %}
+                        <span class="badge bg-danger fs-6">HOY</span>
+                        {% elif r.dias_restantes == 1 %}
+                        <span class="badge bg-warning text-dark fs-6">Mañana</span>
+                        {% else %}
+                        <span class="badge bg-info text-dark">En {{ r.dias_restantes }} días</span>
+                        {% endif %}
+                        <div class="text-muted small mt-1">{{ r.fecha }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Formulario agregar -->
+<div class="form-section">
+    <h5 class="mb-3">
+        <i class="bi bi-plus-circle"></i> Agregar Recordatorio
+        <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#formRec">
+            Mostrar/Ocultar
+        </button>
+    </h5>
+    <div class="collapse show" id="formRec">
+        <form method="POST" action="{{ url_for('agregar_recordatorio') }}">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Descripcion</label>
+                    <input type="text" name="descripcion" class="form-control" required
+                           placeholder="Ej: Renta, Internet, Sueldo...">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select" required>
+                        <option value="gasto">Pago / Gasto fijo</option>
+                        <option value="sueldo">Cobro / Sueldo</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Dia del mes</label>
+                    <input type="number" name="dia_mes" class="form-control" min="1" max="31" required
+                           placeholder="1 – 31">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Monto (opcional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="monto" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de recordatorios -->
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded table-mobile-cards">
+        <thead>
+            <tr>
+                <th>Descripcion</th>
+                <th>Tipo</th>
+                <th>Dia del Mes</th>
+                <th class="text-end">Monto</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in recordatorios %}
+            <tr {% if not r.activo %}class="text-muted"{% endif %}>
+                <td data-label="Descripcion">
+                    {% if r.tipo == 'sueldo' %}
+                    <i class="bi bi-cash-coin text-success me-1"></i>
+                    {% else %}
+                    <i class="bi bi-credit-card text-danger me-1"></i>
+                    {% endif %}
+                    {{ r.descripcion }}
+                </td>
+                <td data-label="Tipo">
+                    {% if r.tipo == 'sueldo' %}
+                    <span class="badge bg-success">Cobro</span>
+                    {% else %}
+                    <span class="badge bg-danger">Pago</span>
+                    {% endif %}
+                </td>
+                <td data-label="Dia del Mes">
+                    <span class="fw-bold" style="color: var(--azul);">Día {{ r.dia_mes }}</span>
+                    <small class="text-muted d-block">de cada mes</small>
+                </td>
+                <td data-label="Monto" class="text-end fw-bold">
+                    {% if r.monto > 0 %}{{ r.monto|moneda }}{% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+                <td data-label="Estado" class="text-center">
+                    {% if r.activo %}
+                    <span class="badge bg-success">Activo</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Pausado</span>
+                    {% endif %}
+                </td>
+                <td data-label="" class="text-center">
+                    <form method="POST" action="{{ url_for('toggle_recordatorio_route', id=r.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ 'Pausar' if r.activo else 'Activar' }}">
+                            <i class="bi bi-{{ 'pause-fill' if r.activo else 'play-fill' }}"></i>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('eliminar_recordatorio', id=r.id) }}" class="d-inline"
+                          onsubmit="return confirm('¿Eliminar este recordatorio?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-5">
+                    <i class="bi bi-bell-slash fs-2 d-block mb-2"></i>
+                    No tienes recordatorios. Agrega uno arriba.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Info sobre notificaciones -->
+<div class="alert alert-info mt-3">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>¿Cómo funcionan?</strong> El sistema revisa tus recordatorios y te avisa con 3 días de anticipación.
+    Verás alertas en el panel de inicio y notificaciones del navegador (si las activas).
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const btnActivarNotif = document.getElementById('btnActivarNotif');
+
+if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+        btnActivarNotif.style.display = '';
+        btnActivarNotif.addEventListener('click', () => {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    btnActivarNotif.style.display = 'none';
+                    new Notification('ContHome', {
+                        body: 'Notificaciones activadas. Te avisaremos de tus recordatorios.',
+                        icon: '/static/favicon.png'
+                    });
+                }
+            });
+        });
+    } else if (Notification.permission === 'denied') {
+        btnActivarNotif.textContent = 'Notificaciones bloqueadas en el navegador';
+        btnActivarNotif.style.display = '';
+        btnActivarNotif.disabled = true;
+    }
+}
+</script>
+{% endblock %}
