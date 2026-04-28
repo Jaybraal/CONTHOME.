@@ -144,13 +144,21 @@ def migrate_db():
             usuario_id INTEGER NOT NULL,
             descripcion TEXT NOT NULL,
             monto REAL NOT NULL DEFAULT 0,
-            dia_mes INTEGER NOT NULL,
+            dia_mes INTEGER NOT NULL DEFAULT 1,
             tipo TEXT NOT NULL DEFAULT 'gasto',
+            recurrencia TEXT NOT NULL DEFAULT 'mensual',
+            fecha_especifica TEXT,
             activo INTEGER NOT NULL DEFAULT 1,
             created_at TEXT DEFAULT (datetime('now', 'localtime')),
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )
     ''')
+
+    rec_cols = [row[1] for row in cursor.execute("PRAGMA table_info(recordatorios)").fetchall()]
+    if 'recurrencia' not in rec_cols:
+        cursor.execute("ALTER TABLE recordatorios ADD COLUMN recurrencia TEXT NOT NULL DEFAULT 'mensual'")
+    if 'fecha_especifica' not in rec_cols:
+        cursor.execute("ALTER TABLE recordatorios ADD COLUMN fecha_especifica TEXT")
 
     conn.commit()
     conn.close()

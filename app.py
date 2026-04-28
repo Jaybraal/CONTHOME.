@@ -415,8 +415,18 @@ def recordatorios():
 @login_required
 def agregar_recordatorio():
     form = request.form
+    recurrencia = form.get('recurrencia', 'mensual')
+    fecha_especifica = form.get('fecha_especifica', '').strip() or None
+    dia_mes = form.get('dia_mes', '1')
+    if recurrencia == 'unico' and fecha_especifica:
+        from datetime import date as _date
+        try:
+            d = _date.fromisoformat(fecha_especifica)
+            dia_mes = str(d.day)
+        except ValueError:
+            pass
     add_recordatorio(get_db(), uid(), form['descripcion'], form.get('monto', 0),
-                     form['dia_mes'], form.get('tipo', 'gasto'))
+                     dia_mes, form.get('tipo', 'gasto'), recurrencia, fecha_especifica)
     flash('Recordatorio agregado', 'success')
     return redirect(url_for('recordatorios'))
 

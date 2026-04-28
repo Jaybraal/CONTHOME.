@@ -45,15 +45,11 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if u.id != current_user['id'] %}
                         <form method="POST" action="{{ url_for('admin_toggle_diezmo', uid_param=u.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-sm {% if u.diezmo_activo %}btn-outline-success{% else %}btn-outline-secondary{% endif %}" title="{{ 'Desactivar diezmo' if u.diezmo_activo else 'Activar diezmo' }}">
                                 <i class="bi bi-heart{% if not u.diezmo_activo %}-fill text-muted{% else %}-fill text-success{% endif %}"></i>
                             </button>
                         </form>
-                        {% else %}
-                        <span class="text-muted small">—</span>
-                        {% endif %}
                     </td>
                     <td>
                         {% if u.id != current_user['id'] %}

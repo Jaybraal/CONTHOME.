@@ -2,6 +2,18 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
+<!-- Reactivar diezmo si está desactivado -->
+{% if current_user and not current_user['diezmo_activo'] %}
+<div class="alert alert-secondary d-flex justify-content-between align-items-center mb-3">
+    <span><i class="bi bi-heart text-muted me-2"></i>La sección de <strong>Diezmo</strong> está desactivada.</span>
+    <form method="POST" action="{{ url_for('mi_toggle_diezmo') }}">
+        <button type="submit" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-heart-fill"></i> Reactivar
+        </button>
+    </form>
+</div>
+{% endif %}
+
 <!-- Alertas de recordatorios próximos -->
 {% if recordatorios_proximos %}
 <div class="alert alert-warning alert-dismissible fade show d-flex align-items-start gap-2 mb-3" role="alert">

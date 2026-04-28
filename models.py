@@ -309,17 +309,14 @@ def get_recordatorios_proximos(db, usuario_id, dias=3):
     for r in all_recs:
         if not r['activo']:
             continue
-        dia = r['dia_mes']
-        for delta_months in [0, 1]:
-            month = today.month + delta_months
-            year = today.year
-            if month > 12:
-                month -= 12
-                year += 1
-            max_day = calendar.monthrange(year, month)[1]
-            actual_day = min(dia, max_day)
+        recurrencia = r['recurrencia'] if r['recurrencia'] else 'mensual'
+
+        if recurrencia == 'unico':
+            fe = r['fecha_especifica']
+            if not fe:
+                continue
             try:
-                target = date(year, month, actual_day)
+                target = date.fromisoformat(fe)
             except ValueError:
                 continue
             diff = (target - today).days
@@ -330,17 +327,50 @@ def get_recordatorios_proximos(db, usuario_id, dias=3):
                     'monto': r['monto'],
                     'tipo': r['tipo'],
                     'dia_mes': r['dia_mes'],
+                    'recurrencia': recurrencia,
+                    'fecha_especifica': fe,
                     'dias_restantes': diff,
                     'fecha': target.isoformat(),
                 })
-                break
+        else:
+            dia = r['dia_mes']
+            for delta_months in [0, 1]:
+                month = today.month + delta_months
+                year = today.year
+                if month > 12:
+                    month -= 12
+                    year += 1
+                max_day = calendar.monthrange(year, month)[1]
+                actual_day = min(dia, max_day)
+                try:
+                    target = date(year, month, actual_day)
+                except ValueError:
+                    continue
+                diff = (target - today).days
+                if 0 <= diff <= dias:
+                    proximos.append({
+                        'id': r['id'],
+                        'descripcion': r['descripcion'],
+                        'monto': r['monto'],
+                        'tipo': r['tipo'],
+                        'dia_mes': r['dia_mes'],
+                        'recurrencia': recurrencia,
+                        'fecha_especifica': None,
+                        'dias_restantes': diff,
+                        'fecha': target.isoformat(),
+                    })
+                    break
     return proximos
 
 
-def add_recordatorio(db, usuario_id, descripcion, monto, dia_mes, tipo='gasto'):
+def add_recordatorio(db, usuario_id, descripcion, monto, dia_mes, tipo='gasto',
+                     recurrencia='mensual', fecha_especifica=None):
     db.execute(
-        "INSERT INTO recordatorios (usuario_id, descripcion, monto, dia_mes, tipo) VALUES (?, ?, ?, ?, ?)",
-        (usuario_id, descripcion, float(monto) if monto else 0.0, int(dia_mes), tipo)
+        """INSERT INTO recordatorios
+           (usuario_id, descripcion, monto, dia_mes, tipo, recurrencia, fecha_especifica)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (usuario_id, descripcion, float(monto) if monto else 0.0,
+         int(dia_mes) if dia_mes else 1, tipo, recurrencia, fecha_especifica or None)
     )
     db.commit()
 
